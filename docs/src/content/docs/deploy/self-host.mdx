@@ -218,6 +218,8 @@ An uncommitted checkout adds `-dirty` to the revision and image label. Use a cle
 
 Set `NOD_KUBERNETES_NAMESPACE` to the namespace containing `nod-workspace-0` and `nod-browser-0`. Both pods must have a container named `runtime`. Use singleton StatefulSets to preserve those pod names. The server needs only `get` on these named pods and `get` and `create` on their `pods/exec` subresource. It doesn't need pod listing, Secret reads, or workload creation. Kubernetes RBAC cannot restrict exec to a particular command or container. Treat the server as trusted with both pods.
 
+Set `command: ["sleep", "infinity"]` on the workspace container so it stays available for exec. Without this override, the image inherits `node` as its default command and exits when standard input closes.
+
 Use the matching upstream workspace and browser images. The workspace runtime needs root with only `SETUID`, `SETGID`, and `SETPCAP`. Each command drops to the workspace or connected CLI user, clears capabilities, and sets no-new-privileges. The browser runs as UID 1000. Neither runtime pod needs a service account token, privileged mode, a Docker socket, or a host mount.
 
 Mount the same persistent workspace directory at `/var/lib/nod/workspaces` in the server and `/workspace` in the workspace pod. Persist the server data, workspace home, connected CLI installation directory `/var/tmp`, and browser `/data`. Provide writable temporary directories and browser `/home/node`. Keep all three workloads on the same node when using ReadWriteOnce storage.
@@ -251,7 +253,7 @@ This is a maintained fork integration, not an upstream Kubernetes installer. You
 
 ## Keep it running
 
-The containers restart when Docker starts. On a Mac, Docker Desktop starts after you sign in when its startup setting is enabled.
+For Docker installations, the containers restart when Docker starts. On a Mac, Docker Desktop starts after you sign in when its startup setting is enabled. Kubernetes installations use the restart and replacement behavior of their Deployments and StatefulSets instead.
 
 Follow [Back up and update a server](/deploy/server-operations/) before your first update. Keep the Vault key with your backup; the database alone cannot recover saved credentials.
 
